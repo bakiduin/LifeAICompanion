@@ -1,0 +1,16 @@
+{
+    "name": "LifeAICompanion",
+    "short_name": "LifeAI",
+    "description": "The Ethereal Archive - Local-Only Neural Ledger",
+    "start_url": "/index.html",
+    "display": "standalone",
+    "background_color": "#F8FAFC",
+    "theme_color": "#00D1FF",
+    "icons": [
+        {
+            "src": "https://cdn-icons-png.flaticon.com/512/1693/1693746.png",
+            "sizes": "512x512",
+            "type": "image/png"
+        }
+    ]
+}

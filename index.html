@@ -5,12 +5,54 @@
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
     <title>LifeAICompanion - The Ethereal Archive</title>
+    <link rel="manifest" href="manifest.json">
+    <meta name="apple-mobile-web-app-capable" content="yes">
+    <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link
         href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap"
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
+    <script>
+        let deferredPrompt;
+
+        // 1. Listen for the browser's install signal
+        window.addEventListener('beforeinstallprompt', (e) => {
+            // Prevent the mini-infobar from appearing on mobile
+            e.preventDefault();
+            // Stash the event so it can be triggered later
+            deferredPrompt = e;
+            console.log('PWA Install candidate detected');
+        });
+
+        // 2. Attempt to trigger installation on the first user interaction
+        window.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                // Show the install prompt
+                deferredPrompt.prompt();
+
+                // Wait for the user to respond to the prompt
+                const { outcome } = await deferredPrompt.userChoice;
+                console.log(`User response to install prompt: ${outcome}`);
+
+                // We've used the prompt, and can't use it again
+                deferredPrompt = null;
+            }
+        });
+
+        // 3. Optional: Logic for when the app is successfully installed
+        window.addEventListener('appinstalled', (evt) => {
+            console.log('LifeAICompanion was successfully installed!');
+        });
+
+        // Register Service Worker
+        if ('serviceWorker' in navigator) {
+            navigator.serviceWorker.register('sw.js')
+                .then(() => console.log("Service Worker Registered"))
+                .catch(err => console.error("Service Worker Failed", err));
+        }
+    </script>
     <script id="tailwind-config">
         tailwind.config = {
             darkMode: "class",
@@ -97,10 +139,9 @@
             <div class="flex items-center gap-6">
                 <button
                     class="material-symbols-outlined text-slate-400 hover:text-slate-900 transition-colors">terminal</button>
-                <button
-                    class="px-7 py-2.5 rounded-full bg-slate-950 text-white font-bold text-[10px] uppercase tracking-widest hover:bg-primary transition-all duration-300 shadow-lg shadow-slate-900/10">
-                                    Initialize
-                                </button>
+                <button onclick="installApp()" class="px-7 py-2.5 ...">
+                    Initialize
+                </button>
             </div>
         </div>
     </nav>
