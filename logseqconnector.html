@@ -1,0 +1,127 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Bakidu | LifeAICompanion Logseq Connector</title>
+    <style>
+        body {
+            font-family: -apple-system, sans-serif;
+            padding: 2rem;
+            line-height: 1.6;
+            max-width: 800px;
+            margin: auto;
+        }
+
+        .container {
+            border: 1px solid #e1e4e8;
+            padding: 2rem;
+            border-radius: 8px;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        button {
+            background: #2ea44f;
+            color: white;
+            border: none;
+            padding: 10px 20px;
+            border-radius: 6px;
+            cursor: pointer;
+            font-size: 1rem;
+        }
+
+        button:hover {
+            background: #2c974b;
+        }
+
+        #status {
+            margin-top: 1rem;
+            font-weight: bold;
+        }
+
+        #file-list {
+            margin-top: 1rem;
+            max-height: 300px;
+            overflow-y: auto;
+            background: #f6f8fa;
+            padding: 1rem;
+            border-radius: 4px;
+        }
+
+        .file-item {
+            font-family: monospace;
+            font-size: 0.9rem;
+            border-bottom: 1px solid #ddd;
+            padding: 4px 0;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="container">
+        <h2>🧬 Logseq Graph Connector</h2>
+        <p>Select your Logseq Graph folder to sync <strong>LifeAICompanion</strong>.</p>
+
+        <button id="btn-connect">Open Logseq Graph Folder</button>
+
+        <div id="status">Status: Waiting for connection...</div>
+        <div id="file-list" style="display:none;">
+            <h3>Pages Found (Markdown):</h3>
+            <div id="list-content"></div>
+        </div>
+    </div>
+
+    <script>
+        const btnConnect = document.getElementById('btn-connect');
+        const status = document.getElementById('status');
+        const fileList = document.getElementById('file-list');
+        const listContent = document.getElementById('list-content');
+
+        btnConnect.addEventListener('click', async () => {
+            try {
+                // 1. Open Directory Picker
+                const dirHandle = await window.showDirectoryPicker({
+                    mode: 'readwrite'
+                });
+
+                status.innerText = `Status: Connected to "${dirHandle.name}"`;
+                status.style.color = "#2ea44f";
+                listContent.innerHTML = '';
+                fileList.style.display = 'block';
+
+                // 2. Look for the /pages folder specifically
+                let pagesFolder;
+                try {
+                    pagesFolder = await dirHandle.getDirectoryHandle('pages');
+                } catch (e) {
+                    // If no /pages folder, search the root
+                    pagesFolder = dirHandle;
+                }
+
+                // 3. Iterate through files
+                for await (const entry of pagesFolder.values()) {
+                    if (entry.kind === 'file' && entry.name.endsWith('.md')) {
+                        const div = document.createElement('div');
+                        div.className = 'file-item';
+                        div.innerText = `📄 ${entry.name}`;
+                        listContent.appendChild(div);
+                    }
+                }
+
+            } catch (err) {
+                if (err.name === 'AbortError') {
+                    status.innerText = "Status: Connection cancelled.";
+                } else {
+                    console.error(err);
+                    status.innerText = "Status: Error accessing folder.";
+                    status.style.color = "#d73a49";
+                }
+            }
+        });
+    </script>
+
+</body>
+
+</html>
