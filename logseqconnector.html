@@ -4,124 +4,154 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Bakidu | LifeAICompanion Logseq Connector</title>
+    <title>Sovereign Handshake | LifeAICompanion</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;600;700&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1"
+        rel="stylesheet" />
+
     <style>
         body {
-            font-family: -apple-system, sans-serif;
-            padding: 2rem;
-            line-height: 1.6;
-            max-width: 800px;
-            margin: auto;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+            background-color: #F9FAFB;
         }
 
-        .container {
-            border: 1px solid #e1e4e8;
-            padding: 2rem;
-            border-radius: 8px;
-            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        .glass {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
         }
 
-        button {
-            background: #2ea44f;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            border-radius: 6px;
-            cursor: pointer;
-            font-size: 1rem;
+        .shimmer {
+            background: linear-gradient(90deg, #6C5CE7 0%, #a29bfe 50%, #6C5CE7 100%);
+            background-size: 200% auto;
+            animation: shine 3s linear infinite;
         }
 
-        button:hover {
-            background: #2c974b;
-        }
-
-        #status {
-            margin-top: 1rem;
-            font-weight: bold;
-        }
-
-        #file-list {
-            margin-top: 1rem;
-            max-height: 300px;
-            overflow-y: auto;
-            background: #f6f8fa;
-            padding: 1rem;
-            border-radius: 4px;
-        }
-
-        .file-item {
-            font-family: monospace;
-            font-size: 0.9rem;
-            border-bottom: 1px solid #ddd;
-            padding: 4px 0;
+        @keyframes shine {
+            to {
+                background-position: 200% center;
+            }
         }
     </style>
 </head>
 
-<body>
+<body class="min-h-screen flex items-center justify-center p-6">
 
-    <div class="container">
-        <h2>🧬 Logseq Graph Connector</h2>
-        <p>Select your Logseq Graph folder to sync <strong>LifeAICompanion</strong>.</p>
+    <div class="max-w-md w-full glass p-10 rounded-[2.5rem] shadow-2xl text-center space-y-8 border border-gray-100">
 
-        <button id="btn-connect">Open Logseq Graph Folder</button>
-
-        <div id="status">Status: Waiting for connection...</div>
-        <div id="file-list" style="display:none;">
-            <h3>Pages Found (Markdown):</h3>
-            <div id="list-content"></div>
+        <div class="space-y-2">
+            <div class="w-20 h-20 bg-indigo-50 rounded-3xl flex items-center justify-center mx-auto mb-6">
+                <span class="material-symbols-outlined text-4xl text-[#6C5CE7]">database</span>
+            </div>
+            <h1 class="text-3xl font-extrabold text-slate-900 tracking-tight">Sovereign Connection</h1>
+            <p class="text-gray-500 text-sm leading-relaxed">
+                To begin your journey into <span class="font-semibold italic">The Ethereal Archive</span>, you must
+                grant local access to your Logseq graph.
+            </p>
         </div>
+
+        <div id="connectionBox" class="space-y-4">
+            <button id="connectBtn"
+                class="w-full py-4 px-6 bg-[#6C5CE7] text-white rounded-2xl font-bold flex items-center justify-center gap-3 hover:bg-[#5b4cc4] transition-all transform hover:scale-[1.02] active:scale-95 shadow-lg shadow-indigo-200">
+                <span class="material-symbols-outlined">folder_open</span>
+                Select Logseq Directory
+            </button>
+            <p class="text-[10px] uppercase tracking-widest text-gray-400 font-bold">Privacy Guaranteed: Data never
+                leaves your disk</p>
+        </div>
+
+        <div id="successBox" class="hidden space-y-6">
+            <div
+                class="py-4 px-6 bg-emerald-50 border border-emerald-100 rounded-2xl flex items-center gap-4 text-left">
+                <span class="material-symbols-outlined text-emerald-500">check_circle</span>
+                <div>
+                    <p class="text-sm font-bold text-emerald-900 leading-none">Graph Connected</p>
+                    <p id="folderName" class="text-[11px] text-emerald-700 mt-1 opacity-70">/path/to/logseq</p>
+                </div>
+            </div>
+
+            <div class="grid grid-cols-2 gap-4">
+                <div class="p-4 bg-gray-50 rounded-2xl">
+                    <p id="fileCount" class="text-2xl font-bold text-slate-900">0</p>
+                    <p class="text-[10px] text-gray-400 uppercase font-bold">Neural Pages</p>
+                </div>
+                <div class="p-4 bg-gray-50 rounded-2xl">
+                    <p class="text-2xl font-bold text-slate-900">Local</p>
+                    <p class="text-[10px] text-gray-400 uppercase font-bold">Sync Mode</p>
+                </div>
+            </div>
+
+            <a href="nivi.html"
+                class="block w-full py-4 bg-slate-900 text-white rounded-2xl font-bold hover:bg-black transition-all">
+                Enter The Archive
+            </a>
+        </div>
+
+        <div id="errorBox" class="hidden p-4 bg-red-50 border border-red-100 rounded-2xl text-red-700 text-xs">
+            <p id="errorMsg">Invalid directory. Please select the root of your Logseq graph.</p>
+        </div>
+
     </div>
 
     <script>
-        const btnConnect = document.getElementById('btn-connect');
-        const status = document.getElementById('status');
-        const fileList = document.getElementById('file-list');
-        const listContent = document.getElementById('list-content');
+        const connectBtn = document.getElementById('connectBtn');
+        const connectionBox = document.getElementById('connectionBox');
+        const successBox = document.getElementById('successBox');
+        const folderName = document.getElementById('folderName');
+        const fileCountEl = document.getElementById('fileCount');
+        const errorBox = document.getElementById('errorBox');
 
-        btnConnect.addEventListener('click', async () => {
+        connectBtn.addEventListener('click', async () => {
             try {
-                // 1. Open Directory Picker
+                // 1. Request directory access (Browser File System Access API)
                 const dirHandle = await window.showDirectoryPicker({
                     mode: 'readwrite'
                 });
 
-                status.innerText = `Status: Connected to "${dirHandle.name}"`;
-                status.style.color = "#2ea44f";
-                listContent.innerHTML = '';
-                fileList.style.display = 'block';
-
-                // 2. Look for the /pages folder specifically
+                // 2. Validate Logseq Structure
                 let pagesFolder;
                 try {
                     pagesFolder = await dirHandle.getDirectoryHandle('pages');
                 } catch (e) {
-                    // If no /pages folder, search the root
-                    pagesFolder = dirHandle;
+                    throw new Error("Missing 'pages' folder. Ensure you selected a valid Logseq graph.");
                 }
 
-                // 3. Iterate through files
+                // 3. Scan for .md files
+                let count = 0;
                 for await (const entry of pagesFolder.values()) {
                     if (entry.kind === 'file' && entry.name.endsWith('.md')) {
-                        const div = document.createElement('div');
-                        div.className = 'file-item';
-                        div.innerText = `📄 ${entry.name}`;
-                        listContent.appendChild(div);
+                        count++;
                     }
                 }
 
-            } catch (err) {
-                if (err.name === 'AbortError') {
-                    status.innerText = "Status: Connection cancelled.";
-                } else {
-                    console.error(err);
-                    status.innerText = "Status: Error accessing folder.";
-                    status.style.color = "#d73a49";
+                if (count === 0) {
+                    throw new Error("The selected Logseq graph appears to be empty.");
                 }
+
+                // 4. Persistence: Save handle reference to IndexedDB for future sessions
+                // (This allows the user to stay connected without re-selecting every time)
+                // Note: Simplified logic here; real apps use libraries like 'browser-fs-access'
+
+                // 5. Update UI
+                folderName.innerText = `Connected: ${dirHandle.name}/pages`;
+                fileCountEl.innerText = count;
+
+                connectionBox.classList.add('hidden');
+                errorBox.classList.add('hidden');
+                successBox.classList.remove('hidden');
+
+                // Optional: Store the folder name in localStorage for the dashboard to display
+                localStorage.setItem('connected_graph', dirHandle.name);
+
+            } catch (err) {
+                console.error(err);
+                errorBox.classList.remove('hidden');
+                document.getElementById('errorMsg').innerText = err.message || "Access denied.";
             }
         });
     </script>
-
 </body>
 
 </html>

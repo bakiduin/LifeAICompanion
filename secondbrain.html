@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Neural Graph | Second Brain</title>
+    <script src="https://d3js.org/d3.v7.min.js"></script>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@400;600;700&display=swap"
+        rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1"
+        rel="stylesheet" />
+    <style>
+        body {
+            margin: 0;
+            background-color: #111111;
+            overflow: hidden;
+            font-family: 'Plus Jakarta Sans', sans-serif;
+        }
+
+        /* Logseq Style UI Controls */
+        .controls {
+            position: absolute;
+            top: 1.5rem;
+            left: 1.5rem;
+            z-index: 100;
+            display: flex;
+            flex-direction: column;
+            gap: 0.8rem;
+        }
+
+        .graph-btn {
+            background: rgba(255, 255, 255, 0.05);
+            backdrop-filter: blur(10px);
+            color: #94A3B8;
+            padding: 0.7rem 1.2rem;
+            border-radius: 10px;
+            font-size: 11px;
+            font-weight: 700;
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            text-transform: uppercase;
+            letter-spacing: 0.05em;
+        }
+
+        .graph-btn:hover {
+            background: rgba(108, 92, 231, 0.2);
+            color: #fff;
+            border-color: #6C5CE7;
+            transform: translateY(-1px);
+        }
+
+        #tooltip {
+            position: absolute;
+            display: none;
+            padding: 6px 12px;
+            background: #252525;
+            color: #fff;
+            border-radius: 6px;
+            font-size: 11px;
+            font-weight: 600;
+            border: 1px solid #333;
+            pointer-events: none;
+            z-index: 1000;
+            box-shadow: 0 4px 12px rgba(0, 0, 0, 0.5);
+        }
+
+        /* Node Pulse Animation for the Core */
+        @keyframes pulse {
+            0% {
+                r: 6;
+                opacity: 0.8;
+            }
+
+            50% {
+                r: 9;
+                opacity: 0.4;
+            }
+
+            100% {
+                r: 6;
+                opacity: 0.8;
+            }
+        }
+
+        .core-pulse {
+            animation: pulse 3s infinite ease-in-out;
+            fill: #6C5CE7;
+            opacity: 0.3;
+        }
+    </style>
+</head>
+
+<body>
+
+    <div class="controls">
+        <a href="nivi.html" class="graph-btn flex items-center gap-2">
+            <span class="material-symbols-outlined text-sm">arrow_back</span> Return to Ledger
+        </a>
+        <button onclick="initializeLogseqScan()" class="graph-btn flex items-center gap-2 border-indigo-500/30">
+            <span class="material-symbols-outlined text-sm">hub</span> Sync Graph Folder
+        </button>
+    </div>
+
+    <div id="tooltip"></div>
+    <div id="graph-container" class="w-screen h-screen"></div>
+
+    <script>
+        let nodes = [];
+        let links = [];
+        const width = window.innerWidth;
+        const height = window.innerHeight;
+
+        const svg = d3.select("#graph-container").append("svg")
+            .attr("width", width)
+            .attr("height", height)
+            .attr("viewBox", [0, 0, width, height]);
+
+        const g = svg.append("g");
+
+        // Zoom & Pan sensitivity
+        svg.call(d3.zoom().scaleExtent([0.1, 10]).on("zoom", (event) => {
+            g.attr("transform", event.transform);
+        }));
+
+        // Physics Engine Configuration (Matching Logseq Repulsion)
+        const simulation = d3.forceSimulation()
+            .force("link", d3.forceLink().id(d => d.id).distance(90))
+            .force("charge", d3.forceManyBody().strength(-250).distanceMax(400))
+            .force("collide", d3.forceCollide().radius(30))
+            .force("center", d3.forceCenter(width / 2, height / 2))
+            .force("x", d3.forceX(width / 2).strength(0.02))
+            .force("y", d3.forceY(height / 2).strength(0.02));
+
+        async function initializeLogseqScan() {
+            try {
+                const root = await window.showDirectoryPicker();
+                const pagesFolder = await root.getDirectoryHandle('pages');
+
+                nodes = [{ id: "Consciousness", type: "core", size: 8 }];
+                links = [];
+
+                for await (const entry of pagesFolder.values()) {
+                    if (entry.kind === 'file' && entry.name.endsWith('.md')) {
+                        const name = entry.name.replace('.md', '');
+                        nodes.push({ id: name, type: "page", size: 4 });
+                        links.push({ source: "Consciousness", target: name });
+                    }
+                }
+                updateVisuals();
+            } catch (err) {
+                console.warn("Folder access required for graph recreation.");
+            }
+        }
+
+        function updateVisuals() {
+            g.selectAll("*").remove();
+
+            // Draw Connection Lines
+            const link = g.append("g")
+                .selectAll("line")
+                .data(links)
+                .join("line")
+                .attr("stroke", "#2A2A2A")
+                .attr("stroke-width", 1);
+
+            // Draw Nodes
+            const node = g.append("g")
+                .selectAll("g")
+                .data(nodes)
+                .join("g")
+                .call(d3.drag()
+                    .on("start", dragstarted)
+                    .on("drag", dragged)
+                    .on("end", dragended));
+
+            // Core Pulse Effect
+            node.filter(d => d.type === 'core')
+                .append("circle")
+                .attr("class", "core-pulse");
+
+            node.append("circle")
+                .attr("r", d => d.size)
+                .attr("fill", d => d.type === 'core' ? "#6C5CE7" : "#444")
+                .attr("stroke", "#111")
+                .attr("stroke-width", 2)
+                .on("mouseover", (e, d) => {
+                    d3.select(e.currentTarget).attr("fill", "#fff").attr("r", d.size + 2);
+                    const tt = document.getElementById('tooltip');
+                    tt.style.display = 'block';
+                    tt.innerText = d.id;
+                    tt.style.left = e.pageX + 12 + 'px';
+                    tt.style.top = e.pageY + 12 + 'px';
+                })
+                .on("mouseout", (e, d) => {
+                    d3.select(e.currentTarget).attr("fill", d.type === 'core' ? "#6C5CE7" : "#444").attr("r", d.size);
+                    document.getElementById('tooltip').style.display = 'none';
+                });
+
+            simulation.nodes(nodes).on("tick", () => {
+                link.attr("x1", d => d.source.x).attr("y1", d => d.source.y)
+                    .attr("x2", d => d.target.x).attr("y2", d => d.target.y);
+                node.attr("transform", d => `translate(${d.x},${d.y})`);
+            });
+
+            simulation.force("link").links(links);
+            simulation.alpha(1).restart();
+        }
+
+        function dragstarted(event) {
+            if (!event.active) simulation.alphaTarget(0.3).restart();
+            event.subject.fx = event.subject.x; event.subject.fy = event.subject.y;
+        }
+        function dragged(event) {
+            event.subject.fx = event.x; event.subject.fy = event.y;
+        }
+        function dragended(event) {
+            if (!event.active) simulation.alphaTarget(0);
+            event.subject.fx = null; event.subject.fy = null;
+        }
+
+        window.addEventListener('resize', () => {
+            svg.attr("width", window.innerWidth).attr("height", window.innerHeight);
+            simulation.force("center", d3.forceCenter(window.innerWidth / 2, window.innerHeight / 2)).restart();
+        });
+    </script>
+</body>
+
+</html>

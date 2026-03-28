@@ -1,0 +1,220 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Logseq Ledger | The Ethereal Archive</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1"
+        rel="stylesheet" />
+    <style>
+        :root {
+            --ls-primary: #6C5CE7;
+            --ls-bg: #FFFFFF;
+            --ls-sidebar: #F8FAFC;
+            --ls-border: #E2E8F0;
+            --ls-text: #1E293B;
+            --ls-bullet-guideline: #CBD5E1;
+        }
+
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: var(--ls-bg);
+            color: var(--ls-text);
+            overflow: hidden;
+        }
+
+        /* Bullet Threading */
+        .bullet-container {
+            position: relative;
+            padding-left: 28px;
+        }
+
+        .bullet-container::before {
+            content: '';
+            position: absolute;
+            left: 10px;
+            top: 24px;
+            bottom: 0;
+            width: 1px;
+            background-color: var(--ls-bullet-guideline);
+        }
+
+        .bullet-container:last-child::before {
+            display: none;
+        }
+
+        /* Logseq Page Links & Tags */
+        .ls-page-link {
+            color: var(--ls-primary);
+            font-weight: 600;
+            cursor: pointer;
+        }
+
+        .ls-page-link:hover {
+            text-decoration: underline;
+            background: #F5F3FF;
+            border-radius: 4px;
+        }
+
+        .tag-pill {
+            background: #F1F5F9;
+            color: #64748B;
+            padding: 2px 6px;
+            border-radius: 4px;
+            font-size: 11px;
+            font-weight: 700;
+            cursor: pointer;
+        }
+
+        /* Sidebar Transition */
+        #right-sidebar {
+            transition: transform 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+            transform: translateX(100%);
+        }
+
+        .sidebar-open #right-sidebar {
+            transform: translateX(0);
+        }
+
+        textarea {
+            background: transparent;
+            border: none;
+            outline: none;
+            resize: none;
+            font-family: 'ui-monospace', monospace;
+            font-size: 15px;
+            color: #334155;
+            line-height: 2;
+        }
+    </style>
+</head>
+
+<body class="flex h-screen">
+
+    <aside class="w-64 bg-[#F1F5F9] border-r border-slate-200 flex flex-col p-5">
+        <div class="flex items-center gap-2 mb-8 px-2">
+            <span class="material-symbols-outlined text-indigo-600 font-bold">menu_book</span>
+            <span class="font-bold text-xs tracking-tight text-slate-700 uppercase">NIVI Journals</span>
+        </div>
+        <nav class="space-y-1">
+            <button
+                class="w-full text-left px-3 py-2 text-sm font-medium bg-white shadow-sm border border-slate-200 rounded-md flex items-center gap-2 text-indigo-600">
+                <span class="material-symbols-outlined text-lg">calendar_today</span> Daily Journal
+            </button>
+            <a href="secondbrain.html"
+                class="w-full text-left px-3 py-2 text-sm font-medium text-slate-500 hover:bg-slate-200 rounded-md flex items-center gap-2">
+                <span class="material-symbols-outlined text-lg">hub</span> Graph View
+            </a>
+        </nav>
+    </aside>
+
+    <main class="flex-1 flex flex-col min-w-0 bg-white relative">
+        <header class="h-14 border-b border-slate-100 flex items-center justify-between px-8">
+            <div class="flex items-center gap-4">
+                <span class="material-symbols-outlined text-slate-400">navigate_before</span>
+                <span class="material-symbols-outlined text-slate-400">navigate_next</span>
+                <h2 class="text-sm font-semibold text-slate-800">Saturday, Mar 28th</h2>
+            </div>
+            <div class="flex gap-2">
+                <button onclick="enterEditMode()" id="edit-btn"
+                    class="text-[10px] font-black text-slate-400 hover:text-indigo-600 tracking-widest uppercase">Edit</button>
+                <button onclick="saveAndRender()" id="save-btn"
+                    class="hidden text-[10px] font-black bg-indigo-600 text-white px-4 py-1.5 rounded-full shadow-lg">Save</button>
+            </div>
+        </header>
+
+        <div id="content-scroller" class="flex-1 overflow-y-auto p-12">
+            <div id="ls-render-engine" class="max-w-3xl"></div>
+            <textarea id="ls-raw-editor" class="hidden w-full h-[70vh]" spellcheck="false"></textarea>
+        </div>
+    </main>
+
+    <aside id="right-sidebar" class="w-[450px] border-l border-slate-200 bg-white flex flex-col shadow-2xl z-50">
+        <header class="h-14 border-b border-slate-100 flex items-center justify-between px-6 bg-slate-50">
+            <span class="text-[10px] font-bold text-slate-500 uppercase tracking-widest" id="sidebar-title">Page
+                Detail</span>
+            <button onclick="closeSidebar()"
+                class="material-symbols-outlined text-slate-400 hover:text-slate-600">close</button>
+        </header>
+        <div id="sidebar-content" class="flex-1 p-8 overflow-y-auto">
+        </div>
+    </aside>
+
+    <script>
+        let journalData = `-\n\t- 06:30\n\t\t- [[Wake]]\n\t\t- Feed 2 broccoli #nanogotchi\n\t\t- Claim 5 +5 broccoli from 2 starter plants\n\t- 07:00\n\t\t- #Nanogames.io Balance\n\t\t\t- Nano - 0.15109755\n\t\t\t- Banano - 38.9288317`;
+
+        const renderEngine = document.getElementById('ls-render-engine');
+        const rawEditor = document.getElementById('ls-raw-editor');
+        const editBtn = document.getElementById('edit-btn');
+        const saveBtn = document.getElementById('save-btn');
+
+        function parseToLogseq(md) {
+            const lines = md.split('\n');
+            let html = '';
+
+            lines.forEach(line => {
+                const tabs = (line.match(/^\t+/g) || [""])[0].length;
+                let content = line.replace(/^[\t- ]+/, '').trim();
+
+                if (content && content !== "-") {
+                    content = content.replace(/\[\[(.*?)\]\]/g, '<span class="ls-page-link" onclick="openSidebar(\'$1\')">$1</span>');
+                    content = content.replace(/#(\w+)/g, '<span class="tag-pill" onclick="openSidebar(\'$1\')">#$1</span>');
+                    content = content.replace(/(Nano|Banano) - ([\d.]+)/g, '<b class="text-slate-900">$1:</b> <span class="text-emerald-600 font-mono font-medium">$2</span>');
+
+                    const indentPadding = tabs * 28;
+                    html += `
+                        <div class="bullet-container" style="margin-left: ${indentPadding}px">
+                            <div class="flex items-start gap-2 py-1.5 group">
+                                <div class="w-1.5 h-1.5 rounded-full bg-slate-300 mt-2.5 group-hover:bg-indigo-400 cursor-pointer"></div>
+                                <div class="text-[15px] text-slate-700 leading-relaxed">${content}</div>
+                            </div>
+                        </div>`;
+                }
+            });
+            renderEngine.innerHTML = html;
+        }
+
+        // SIDEBAR LOGIC
+        function openSidebar(title) {
+            document.body.classList.add('sidebar-open');
+            document.getElementById('sidebar-title').innerText = title;
+            document.getElementById('sidebar-content').innerHTML = `
+                <h1 class="text-2xl font-bold mb-4">${title}</h1>
+                <p class="text-sm text-slate-500 mb-8">References to this page from your archives...</p>
+                <div class="p-4 bg-slate-50 rounded-xl border border-slate-100">
+                    <p class="text-xs text-slate-400 font-bold uppercase mb-2">March 28, 2026</p>
+                    <p class="text-sm text-slate-600">...claimed broccoli from starter plants...</p>
+                </div>
+            `;
+        }
+
+        function closeSidebar() {
+            document.body.classList.remove('sidebar-open');
+        }
+
+        function enterEditMode() {
+            renderEngine.classList.add('hidden');
+            rawEditor.classList.remove('hidden');
+            rawEditor.value = journalData;
+            editBtn.classList.add('hidden');
+            saveBtn.classList.remove('hidden');
+            rawEditor.focus();
+        }
+
+        function saveAndRender() {
+            journalData = rawEditor.value;
+            parseToLogseq(journalData);
+            renderEngine.classList.remove('hidden');
+            rawEditor.classList.add('hidden');
+            editBtn.classList.remove('hidden');
+            saveBtn.classList.add('hidden');
+        }
+
+        window.onload = () => parseToLogseq(journalData);
+    </script>
+</body>
+
+</html>

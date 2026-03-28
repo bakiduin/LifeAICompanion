@@ -4,431 +4,213 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>LifeAICompanion - The Ethereal Archive</title>
+    <title>LifeAICompanion | The Ethereal Archive</title>
+
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
     <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
+    <meta name="theme-color" content="#4A5568">
+
     <script src="https://cdn.tailwindcss.com?plugins=forms,container-queries"></script>
     <link
-        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700;800&family=Manrope:wght@400;500;600;700&display=swap"
+        href="https://fonts.googleapis.com/css2?family=Plus+Jakarta+Sans:wght@300;400;500;600;700&family=Manrope:wght@400;500;600;700&display=swap"
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
+
     <script>
-        let deferredPrompt;
-
-        // 1. Listen for the browser's install signal
-        window.addEventListener('beforeinstallprompt', (e) => {
-            // Prevent the mini-infobar from appearing on mobile
-            e.preventDefault();
-            // Stash the event so it can be triggered later
-            deferredPrompt = e;
-            console.log('PWA Install candidate detected');
-        });
-
-        // 2. Attempt to trigger installation on the first user interaction
-        window.addEventListener('click', async () => {
-            if (deferredPrompt) {
-                // Show the install prompt
-                deferredPrompt.prompt();
-
-                // Wait for the user to respond to the prompt
-                const { outcome } = await deferredPrompt.userChoice;
-                console.log(`User response to install prompt: ${outcome}`);
-
-                // We've used the prompt, and can't use it again
-                deferredPrompt = null;
-            }
-        });
-
-        // 3. Optional: Logic for when the app is successfully installed
-        window.addEventListener('appinstalled', (evt) => {
-            console.log('LifeAICompanion was successfully installed!');
-        });
-
-        // Register Service Worker
-        if ('serviceWorker' in navigator) {
-            navigator.serviceWorker.register('sw.js')
-                .then(() => console.log("Service Worker Registered"))
-                .catch(err => console.error("Service Worker Failed", err));
-        }
-    </script>
-    <script id="tailwind-config">
         tailwind.config = {
-            darkMode: "class",
+            darkMode: 'class',
             theme: {
                 extend: {
                     colors: {
-                        "primary": "#00D1FF",
-                        "slate": {
-                            50: "#F8FAFC", 100: "#F1F5F9", 200: "#E2E8F0", 300: "#CBD5E1", 400: "#94A3B8",
-                            500: "#64748B", 600: "#475569", 700: "#334155", 800: "#1E293B", 900: "#0F172A", 950: "#020617",
+                        nivi: {
+                            slate: "#2D3436",
+                            lavender: "#B2BEC3",
+                            soft: "#F9FAFB",
+                            accent: "#6C5CE7"
                         }
                     },
                     fontFamily: {
-                        "plus-jakarta": ["Plus Jakarta Sans", "sans-serif"],
-                        "manrope": ["Manrope", "sans-serif"],
-                        "headline": ["Plus Jakarta Sans"],
-                        "body": ["Plus Jakarta Sans"],
-                        "label": ["Manrope"]
-                    },
-                    borderRadius: { "DEFAULT": "0.5rem", "lg": "0.75rem", "xl": "1rem", "2xl": "1.5rem", "3xl": "2.5rem", "full": "9999px" },
-                },
-            },
+                        sans: ['Plus Jakarta Sans', 'Manrope', 'sans-serif'],
+                    }
+                }
+            }
         }
     </script>
-    <style>
-        body {
-            background-color: #F8FAFC;
-            color: #1E293B;
-            background-image:
-                radial-gradient(at 0% 0%, hsla(190, 100%, 95%, 1) 0, transparent 50%),
-                radial-gradient(at 100% 100%, hsla(220, 100%, 98%, 1) 0, transparent 50%);
-        }
 
-        .ethereal-glass {
-            background: rgba(255, 255, 255, 0.4);
-            backdrop-filter: blur(20px);
-            border: 1px solid rgba(255, 255, 255, 0.7);
-            box-shadow: 0 8px 32px 0 rgba(31, 38, 135, 0.04);
+    <style type="text/tailwindcss">
+        @layer base {
+            body { @apply bg-nivi-soft text-nivi-slate antialiased font-sans; }
         }
-
-        .iridescent-accent {
-            background: linear-gradient(135deg, #00D1FF 0%, #7000FF 50%, #FF00C7 100%);
-            -webkit-background-clip: text;
-            -webkit-text-fill-color: transparent;
-            opacity: 0.8;
-        }
-
-        .material-symbols-outlined {
-            font-variation-settings: 'FILL' 0, 'wght' 300, 'GRAD' 0, 'opsz' 24;
-        }
-
-        ::-webkit-scrollbar {
-            width: 6px;
-        }
-
-        ::-webkit-scrollbar-track {
-            background: #F1F5F9;
-        }
-
-        ::-webkit-scrollbar-thumb {
-            background: #CBD5E1;
-            border-radius: 10px;
-        }
+        .glass-card { @apply bg-white/70 backdrop-blur-md border border-white/20 rounded-3xl shadow-sm; }
+        #canvas-container { height: 400px; width: 100%; cursor: grab; }
     </style>
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 </head>
 
-<body class="font-body selection:bg-primary/10">
-    <nav class="fixed top-0 w-full z-50 bg-white/60 backdrop-blur-xl border-b border-slate-200/50">
-        <div class="flex justify-between items-center px-8 py-5 max-w-7xl mx-auto">
-            <div class="text-xl font-bold tracking-tight text-slate-900 font-plus-jakarta flex items-center gap-2">
-                <span class="w-2.5 h-2.5 bg-primary rounded-full shadow-[0_0_10px_rgba(0,209,255,0.5)]"></span>
-                            LIFE AI COMPANION
-                       
-            </div>
-            <div class="hidden md:flex items-center space-x-10">
-                <a class="font-manrope text-[10px] uppercase tracking-[0.2em] text-slate-900 border-b-2 border-primary pb-1"
-                    href="#">Methodology</a>
-                <a class="font-manrope text-[10px] uppercase tracking-[0.2em] text-slate-500 hover:text-primary transition-colors"
-                    href="#">Documentation</a>
-                <a class="font-manrope text-[10px] uppercase tracking-[0.2em] text-slate-500 hover:text-primary transition-colors"
-                    href="#">GitHub</a>
-            </div>
-            <div class="flex items-center gap-6">
-                <button
-                    class="material-symbols-outlined text-slate-400 hover:text-slate-900 transition-colors">terminal</button>
-                <button onclick="installApp()" class="px-7 py-2.5 ...">
-                    Initialize
-                </button>
-            </div>
+<body class="overflow-x-hidden">
+
+    <nav
+        class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-white/50 backdrop-blur-lg border-b border-gray-100">
+        <div class="flex items-center gap-2">
+            <span class="material-symbols-outlined text-nivi-accent text-3xl">psychology</span>
+            <span class="font-bold text-xl tracking-tight">NIVI</span>
         </div>
+        <div class="hidden md:flex gap-8 text-sm font-medium">
+            <a href="roadmaps.html" class="hover:text-nivi-accent transition-colors">Roadmaps</a>
+            <a href="templates.html" class="hover:text-nivi-accent transition-colors">Templates</a>
+            <a href="resources.html" class="hover:text-nivi-accent transition-colors">Resources</a>
+        </div>
+        <button id="installBtn"
+            class="hidden bg-nivi-slate text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-black transition-all">
+            Install App
+        </button>
     </nav>
-    <main class="pt-24 overflow-x-hidden">
-        <section class="relative min-h-[90vh] flex items-center px-8 max-w-7xl mx-auto py-20">
-            <div class="grid grid-cols-1 lg:grid-cols-12 gap-16 items-center w-full">
-                <div class="lg:col-span-6 space-y-12 z-10">
-                    <div
-                        class="inline-flex items-center space-x-3 px-4 py-1.5 bg-white border border-slate-200 rounded-full shadow-sm">
-                        <span class="w-1.5 h-1.5 bg-green-500 rounded-full animate-pulse"></span>
+
+    <main class="pt-32 pb-20 px-6">
+        <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
+
+            <div class="space-y-8">
+                <div
+                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-nivi-accent/10 text-nivi-accent text-xs font-bold uppercase tracking-widest">
+                    <span class="relative flex h-2 w-2">
                         <span
-                            class="text-[9px] font-label uppercase tracking-[0.2em] text-slate-500 font-bold">Local-Only
-                            Deployment</span>
-                    </div>
-                    <h1
-                        class="font-headline text-6xl md:text-8xl font-extralight tracking-tighter leading-[0.9] text-slate-900">
-                                            Master your <span class="iridescent-accent font-bold">Neural Ledger.</span>
-                    </h1>
-                    <p
-                        class="text-lg md:text-xl text-slate-500 max-w-xl leading-relaxed font-light border-l-2 border-primary/20 pl-8">
-                                            The ultimate local-first brain expansion. Capture, Organize, Distill, and
-                        Express your thoughts with sovereign AI that lives where you do.
-                                        </p>
-                    <div class="flex flex-wrap gap-4 pt-4">
-                        <button
-                            class="px-10 py-5 bg-primary text-white rounded-xl font-bold text-xs uppercase tracking-[0.2em] hover:shadow-xl hover:shadow-primary/20 transition-all active:scale-95 flex items-center gap-3">
-                            <span class="material-symbols-outlined text-sm">bolt</span>
-                                                    Run Locally
-                                                </button>
-                        <button
-                            class="px-10 py-5 bg-white border border-slate-200 text-slate-700 rounded-xl font-bold text-xs uppercase tracking-[0.2em] hover:border-primary hover:text-primary transition-all active:scale-95 flex items-center gap-3">
-                            <span class="material-symbols-outlined text-sm">code</span>
-                                                    View on GitHub
-                                                </button>
-                    </div>
+                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-nivi-accent opacity-75"></span>
+                        <span class="relative inline-flex rounded-full h-2 w-2 bg-nivi-accent"></span>
+                    </span>
+                    The Ethereal Archive
                 </div>
-                <div class="lg:col-span-6 relative flex items-center justify-center min-h-[500px]"
-                    id="brain-3d-container">
-                    <div class="absolute inset-0 bg-primary/10 rounded-full blur-[120px] scale-150"></div>
-                    <canvas class="z-10 w-full h-full cursor-grab active:cursor-grabbing" id="brain-canvas"></canvas>
+
+                <h1 class="text-5xl md:text-7xl font-extrabold leading-tight text-slate-900">
+                    Your life, <br><span class="text-nivi-accent">de-noised.</span>
+                </h1>
+
+                <p class="text-lg text-gray-500 max-w-md leading-relaxed">
+                    A local-only neural ledger designed to reclaim human agency. No tracking. No noise. Just clarity.
+                </p>
+
+                <div class="flex flex-wrap gap-4">
+                    <a href="nivi.html"
+                        class="bg-nivi-accent text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-nivi-accent/20 hover:scale-105 transition-transform">
+                        Open Ledger
+                    </a>
+                    <a href="logseqconnector.html"
+                        class="bg-white border border-gray-200 text-nivi-slate px-8 py-4 rounded-2xl font-bold hover:bg-gray-50 transition-colors">
+                        Connect Logseq
+                    </a>
                 </div>
             </div>
-        </section>
-        <section class="py-32 px-8 max-w-7xl mx-auto">
-            <div
-                class="mb-24 flex flex-col md:flex-row md:items-end justify-between gap-8 border-b border-slate-200 pb-12">
-                <div>
-                    <p class="font-manrope text-[10px] uppercase tracking-[0.5em] text-primary font-bold mb-4">
-                        Methodology</p>
-                    <h2 class="font-headline text-4xl md:text-5xl font-light text-slate-900 tracking-tight">
-                                            Built on the <span class="font-bold">C.O.D.E.</span> engine.
-                                        </h2>
+
+            <div class="relative">
+                <div id="canvas-container" class="relative z-10">
                 </div>
-                <p class="text-slate-500 max-w-md text-sm leading-relaxed font-light">
-                                    We've automated Tiago Forte's Second Brain methodology to run silently in the
-                    background of your local knowledge graph.
-                                </p>
-            </div>
-            <div class="grid grid-cols-1 md:grid-cols-4 gap-6">
-                <div class="ethereal-glass p-10 rounded-3xl hover:border-primary/50 transition-all group">
-                    <div class="text-primary font-mono text-sm mb-12 font-bold">01 / CAPTURE</div>
-                    <h3 class="text-slate-900 text-xl font-bold mb-4 uppercase tracking-wider">Passive Intake</h3>
-                    <p class="text-slate-500 text-sm leading-relaxed font-light">
-                                            LifeAI monitors your Logseq journals, instantly indexing new thoughts
-                        without cloud latency.
-                                        </p>
-                </div>
-                <div class="ethereal-glass p-10 rounded-3xl hover:border-primary/50 transition-all group">
-                    <div class="text-primary font-mono text-sm mb-12 font-bold">02 / ORGANIZE</div>
-                    <h3 class="text-slate-900 text-xl font-bold mb-4 uppercase tracking-wider">Semantic Maps</h3>
-                    <p class="text-slate-500 text-sm leading-relaxed font-light">
-                                            Auto-tagging and bi-directional linking powered by local embedding models.
-                                        </p>
-                </div>
-                <div class="ethereal-glass p-10 rounded-3xl hover:border-primary/50 transition-all group">
-                    <div class="text-primary font-mono text-sm mb-12 font-bold">03 / DISTILL</div>
-                    <h3 class="text-slate-900 text-xl font-bold mb-4 uppercase tracking-wider">Neural Summaries</h3>
-                    <p class="text-slate-500 text-sm leading-relaxed font-light">
-                                            Extract the essence of long-form notes using private LLMs like Llama 3 or
-                        Mistral.
-                                        </p>
-                </div>
-                <div class="ethereal-glass p-10 rounded-3xl hover:border-primary/50 transition-all group">
-                    <div class="text-primary font-mono text-sm mb-12 font-bold">04 / EXPRESS</div>
-                    <h3 class="text-slate-900 text-xl font-bold mb-4 uppercase tracking-wider">Rapid Output</h3>
-                    <p class="text-slate-500 text-sm leading-relaxed font-light">
-                                            Transform rough ideas into polished articles or code through an integrated
-                        private interface.
-                                        </p>
-                </div>
-            </div>
-        </section>
-        <section class="py-32 px-8 max-w-7xl mx-auto grid grid-cols-1 md:grid-cols-12 gap-12">
-            <div class="md:col-span-4 space-y-8">
                 <div
-                    class="w-14 h-14 bg-white border border-slate-200 rounded-2xl flex items-center justify-center text-primary shadow-sm">
-                    <span class="material-symbols-outlined text-3xl">verified_user</span>
-                </div>
-                <h3 class="font-headline text-3xl font-light text-slate-900">Sovereign Architecture</h3>
-                <p class="text-slate-500 leading-relaxed font-light">
-                                    In an age of surveillance, your knowledge is your power. We ensure it never touches
-                    a server you don't own.
-                                </p>
-                <div
-                    class="pt-4 flex items-center gap-4 text-xs font-mono text-primary uppercase tracking-widest font-bold">
-                    <span class="w-8 h-[2px] bg-primary"></span>
-                                    Audit our Source
-                               
+                    class="absolute inset-0 bg-gradient-to-tr from-nivi-accent/5 to-transparent rounded-full blur-3xl -z-10">
                 </div>
             </div>
-            <div class="md:col-span-8 grid grid-cols-1 sm:grid-cols-2 gap-6">
-                <div class="p-8 ethereal-glass rounded-2xl hover:border-primary/30 transition-all">
-                    <span class="material-symbols-outlined text-primary mb-6">memory</span>
-                    <h4 class="text-slate-900 font-bold mb-3 uppercase text-xs tracking-widest">Hardware Native</h4>
-                    <p class="text-slate-500 text-sm font-light leading-relaxed">Optimized for Apple Silicon M-Series
-                        and NVIDIA GPUs for real-time inference.</p>
-                </div>
-                <div class="p-8 ethereal-glass rounded-2xl hover:border-primary/30 transition-all">
-                    <span class="material-symbols-outlined text-primary mb-6">database</span>
-                    <h4 class="text-slate-900 font-bold mb-3 uppercase text-xs tracking-widest">Markdown First</h4>
-                    <p class="text-slate-500 text-sm font-light leading-relaxed">Your data remains in open .md files. No
-                        proprietary database lock-in, ever.</p>
-                </div>
-                <div class="p-8 ethereal-glass rounded-2xl hover:border-primary/30 transition-all">
-                    <span class="material-symbols-outlined text-primary mb-6">groups</span>
-                    <h4 class="text-slate-900 font-bold mb-3 uppercase text-xs tracking-widest">Open Source</h4>
-                    <p class="text-slate-500 text-sm font-light leading-relaxed">Transparent, community-driven
-                        development. Verify the privacy yourself.</p>
-                </div>
-                <div class="p-8 ethereal-glass rounded-2xl hover:border-primary/30 transition-all">
-                    <span class="material-symbols-outlined text-primary mb-6">offline_bolt</span>
-                    <h4 class="text-slate-900 font-bold mb-3 uppercase text-xs tracking-widest">Zero Cloud</h4>
-                    <p class="text-slate-500 text-sm font-light leading-relaxed">Works perfectly in airplane mode. Your
-                        AI travels with your data.</p>
-                </div>
-            </div>
-        </section>
-        <section class="py-48 px-8 max-w-7xl mx-auto text-center relative overflow-hidden">
-            <div
-                class="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-full h-[600px] bg-primary/5 rounded-full blur-[150px]">
-            </div>
-            <div class="relative z-10 space-y-10">
-                <h2
-                    class="font-headline text-5xl md:text-7xl font-light max-w-4xl mx-auto leading-tight text-slate-900 tracking-tighter">
-                                    Deploy your <span class="iridescent-accent font-bold">Private Intelligence.</span>
-                </h2>
-                <p class="text-slate-500 text-lg md:text-xl max-w-2xl mx-auto font-light">
-                                    The Ethereal Archive is ready for initialization. Join the network of local-first
-                    thinkers.
-                                </p>
-                <div class="flex flex-col sm:flex-row items-center justify-center gap-6 pt-10">
-                    <button
-                        class="w-full sm:w-auto px-12 py-6 bg-slate-950 text-white rounded-2xl font-bold text-xs uppercase tracking-[0.3em] hover:bg-primary hover:shadow-2xl hover:shadow-primary/30 transition-all active:scale-95 flex items-center justify-center gap-3">
-                        <span class="material-symbols-outlined">rocket_launch</span>
-                                            Initialize Ledger
-                                        </button>
-                    <button
-                        class="w-full sm:w-auto px-12 py-6 ethereal-glass text-slate-900 rounded-2xl font-bold text-xs uppercase tracking-[0.3em] hover:border-primary transition-all active:scale-95 flex items-center justify-center gap-3">
-                        <span class="material-symbols-outlined">menu_book</span>
-                                            Documentation
-                                        </button>
-                </div>
-            </div>
-        </section>
-    </main>
-    <footer class="w-full py-16 border-t border-slate-200 bg-white/40 backdrop-blur-md">
-        <div class="flex flex-col items-center justify-center gap-8 w-full max-w-7xl mx-auto px-8">
-            <div class="text-xs font-mono text-slate-400 uppercase tracking-[0.4em] flex items-center gap-4 font-bold">
-                <span class="w-12 h-px bg-slate-200"></span>
-                            Life AI Companion
-                            <span class="w-12 h-px bg-slate-200"></span>
-            </div>
-            <div class="flex items-center space-x-12">
-                <a class="font-manrope text-[10px] uppercase tracking-widest text-slate-500 hover:text-primary transition-colors"
-                    href="#">Privacy Protocol</a>
-                <a class="font-manrope text-[10px] uppercase tracking-widest text-slate-500 hover:text-primary transition-colors"
-                    href="#">Terms of Use</a>
-                <a class="font-manrope text-[10px] uppercase tracking-widest text-slate-500 hover:text-primary transition-colors"
-                    href="#">Status: Online</a>
-            </div>
-            <p class="font-manrope text-[9px] uppercase tracking-[0.3em] text-slate-400">
-                            © 2024 LIFEAI COMPANION. THE NEURAL LEDGER PROJECT.
-                        </p>
         </div>
+    </main>
+
+    <section class="bg-white py-24 border-y border-gray-100">
+        <div class="max-w-4xl mx-auto text-center px-6">
+            <h2 class="text-3xl font-bold mb-6 text-slate-900">The Bakidu Philosophy</h2>
+            <p class="text-xl text-gray-500 italic">"Technology should scaffold human intelligence, not replace it."</p>
+            <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
+                <div class="p-6">
+                    <span class="material-symbols-outlined text-4xl text-nivi-accent mb-4">shield</span>
+                    <h3 class="font-bold mb-2">Privacy First</h3>
+                    <p class="text-sm text-gray-500">Local-only storage. Your data never leaves your device.</p>
+                </div>
+                <div class="p-6">
+                    <span class="material-symbols-outlined text-4xl text-nivi-accent mb-4">filter_center_focus</span>
+                    <h3 class="font-bold mb-2">Calm Focus</h3>
+                    <p class="text-sm text-gray-500">Zero notifications. No reactive noise. Total agency.</p>
+                </div>
+                <div class="p-6">
+                    <span class="material-symbols-outlined text-4xl text-nivi-accent mb-4">account_tree</span>
+                    <h3 class="font-bold mb-2">Dynamic Logic</h3>
+                    <p class="text-sm text-gray-500">Adaptive roadmaps that evolve with your progress.</p>
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <footer class="py-12 px-6 text-center text-gray-400 text-xs">
+        © 2026 Bakidu. Built for Sovereign Intelligence.
     </footer>
 
+    <script type="importmap">
+        { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
+    </script>
     <script type="module">
-        import * as THREE from 'https://cdn.skypack.dev/three@0.128.0/build/three.module.js';
-        import { GLTFLoader } from 'https://cdn.skypack.dev/three@0.128.0/examples/jsm/loaders/GLTFLoader.js';
+        import * as THREE from 'three';
 
-        const container = document.getElementById('brain-3d-container');
-        const canvas = document.getElementById('brain-canvas');
-
-        // 1. Scene & Camera
+        const container = document.getElementById('canvas-container');
         const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(45, container.offsetWidth / container.offsetHeight, 0.1, 1000);
-        camera.position.z = 8;
+        const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
 
-        // 2. Renderer
-        const renderer = new THREE.WebGLRenderer({ canvas: canvas, antialias: true, alpha: true });
-        renderer.setPixelRatio(window.devicePixelRatio);
-        renderer.setSize(container.offsetWidth, container.offsetHeight);
-        renderer.outputEncoding = THREE.sRGBEncoding;
+        renderer.setSize(container.clientWidth, container.clientHeight);
+        container.appendChild(renderer.domElement);
 
-        // 3. Realistic Lighting (Essential for "Realistic" look)
-        const ambientLight = new THREE.AmbientLight(0xffffff, 0.5);
-        scene.add(ambientLight);
-
-        const mainLight = new THREE.DirectionalLight(0x00D1FF, 1.5);
-        mainLight.position.set(5, 5, 5);
-        scene.add(mainLight);
-
-        const backLight = new THREE.PointLight(0x7000FF, 1);
-        backLight.position.set(-5, -2, -2);
-        scene.add(backLight);
-
-        // 4. Load the Realistic Model
-        let brainModel;
-        const loader = new GLTFLoader();
-
-        // Replace 'path/to/brain.glb' with your actual model file in the repo
-        loader.load('brain.glb', (gltf) => {
-            brainModel = gltf.scene;
-
-            // Apply custom Ethereal/Realistic Material
-            brainModel.traverse((node) => {
-                if (node.isMesh) {
-                    node.material = new THREE.MeshStandardMaterial({
-                        color: 0xffffff,
-                        metalness: 0.2,
-                        roughness: 0.4,
-                        transparent: true,
-                        opacity: 0.9,
-                        emissive: 0x00D1FF,
-                        emissiveIntensity: 0.1
-                    });
-                }
-            });
-
-            // Center the model
-            const box = new THREE.Box3().setFromObject(brainModel);
-            const center = box.getCenter(new THREE.Vector3());
-            brainModel.position.sub(center);
-
-            scene.add(brainModel);
-        }, undefined, (error) => {
-            console.error("An error occurred loading the brain model. Ensure brain.glb is in your folder.", error);
+        // Simple Geometric Brain-like Structure (Placeholder for GLB)
+        const geometry = new THREE.IcosahedronGeometry(2, 2);
+        const material = new THREE.MeshStandardMaterial({
+            color: 0x6C5CE7,
+            wireframe: true,
+            transparent: true,
+            opacity: 0.4
         });
+        const mesh = new THREE.Mesh(geometry, material);
+        scene.add(mesh);
 
-        // 5. Interaction Logic
-        let mouseX = 0, mouseY = 0;
-        let targetX = 0, targetY = 0;
+        const light = new THREE.PointLight(0xffffff, 50);
+        light.position.set(5, 5, 5);
+        scene.add(light);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
 
-        window.addEventListener('mousemove', (e) => {
-            mouseX = (e.clientX - window.innerWidth / 2) / 100;
-            mouseY = (e.clientY - window.innerHeight / 2) / 100;
-        });
+        camera.position.z = 5;
 
-        // 6. Animation Loop
         function animate() {
             requestAnimationFrame(animate);
-
-            if (brainModel) {
-                // Smooth "follow" effect for the cursor
-                targetX += (mouseX - targetX) * 0.05;
-                targetY += (mouseY - targetY) * 0.05;
-
-                brainModel.rotation.y = targetX;
-                brainModel.rotation.x = targetY;
-
-                // Subtle breathing/floating animation
-                brainModel.position.y = Math.sin(Date.now() * 0.001) * 0.1;
-            }
-
+            mesh.rotation.y += 0.005;
+            mesh.rotation.x += 0.002;
             renderer.render(scene, camera);
         }
-
         animate();
 
-        // Responsive resize
         window.addEventListener('resize', () => {
-            camera.aspect = container.offsetWidth / container.offsetHeight;
+            camera.aspect = container.clientWidth / container.clientHeight;
             camera.updateProjectionMatrix();
-            renderer.setSize(container.offsetWidth, container.offsetHeight);
+            renderer.setSize(container.clientWidth, container.clientHeight);
         });
     </script>
 
+    <script>
+        if ('serviceWorker' in navigator) {
+            window.addEventListener('load', () => {
+                navigator.serviceWorker.register('/sw.js');
+            });
+        }
+
+        let deferredPrompt;
+        const installBtn = document.getElementById('installBtn');
+
+        window.addEventListener('beforeinstallprompt', (e) => {
+            e.preventDefault();
+            deferredPrompt = e;
+            installBtn.classList.remove('hidden');
+        });
+
+        installBtn.addEventListener('click', async () => {
+            if (deferredPrompt) {
+                deferredPrompt.prompt();
+                const { outcome } = await deferredPrompt.userChoice;
+                if (outcome === 'accepted') installBtn.classList.add('hidden');
+                deferredPrompt = null;
+            }
+        });
+    </script>
 </body>
 
 </html>
