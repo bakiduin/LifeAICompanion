@@ -69,7 +69,6 @@
 
     <main class="pt-32 pb-20 px-6">
         <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-
             <div class="space-y-8">
                 <div
                     class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-nivi-accent/10 text-nivi-accent text-xs font-bold uppercase tracking-widest">
@@ -78,32 +77,32 @@
                             class="animate-ping absolute inline-flex h-full w-full rounded-full bg-nivi-accent opacity-75"></span>
                         <span class="relative inline-flex rounded-full h-2 w-2 bg-nivi-accent"></span>
                     </span>
-                    The Ethereal Archive
+                    Neural Ledger Active
                 </div>
 
                 <h1 class="text-5xl md:text-7xl font-extrabold leading-tight text-slate-900">
-                    Your life, <br><span class="text-nivi-accent">de-noised.</span>
+                    Your brain, <br><span class="text-nivi-accent">visualized.</span>
                 </h1>
 
                 <p class="text-lg text-gray-500 max-w-md leading-relaxed">
-                    A local-only neural ledger designed to reclaim human agency. No tracking. No noise. Just clarity.
+                    A local-first neural archive that transforms your daily Logseq journals into a living, breathing
+                    knowledge graph.
                 </p>
 
                 <div class="flex flex-wrap gap-4">
                     <a href="nivi.html"
                         class="bg-nivi-accent text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-nivi-accent/20 hover:scale-105 transition-transform">
-                        Open Ledger
+                        Enter Journal
                     </a>
-                    <a href="logseqconnector.html"
+                    <a href="secondbrain.html"
                         class="bg-white border border-gray-200 text-nivi-slate px-8 py-4 rounded-2xl font-bold hover:bg-gray-50 transition-colors">
-                        Connect Logseq
+                        View Neural Map
                     </a>
                 </div>
             </div>
 
             <div class="relative">
-                <div id="canvas-container" class="relative z-10">
-                </div>
+                <div id="canvas-container" class="relative z-10"></div>
                 <div
                     class="absolute inset-0 bg-gradient-to-tr from-nivi-accent/5 to-transparent rounded-full blur-3xl -z-10">
                 </div>
@@ -153,37 +152,47 @@
         renderer.setSize(container.clientWidth, container.clientHeight);
         container.appendChild(renderer.domElement);
 
-        // Simple Geometric Brain-like Structure (Placeholder for GLB)
-        const geometry = new THREE.IcosahedronGeometry(2, 2);
-        const material = new THREE.MeshStandardMaterial({
-            color: 0x6C5CE7,
-            wireframe: true,
-            transparent: true,
-            opacity: 0.4
-        });
-        const mesh = new THREE.Mesh(geometry, material);
-        scene.add(mesh);
+        // CREATE A NEURAL CLOUD (Mimicking your Logseq Graph)
+        const group = new THREE.Group();
+        const nodeCount = 40;
+        const positions = [];
 
-        const light = new THREE.PointLight(0xffffff, 50);
-        light.position.set(5, 5, 5);
-        scene.add(light);
-        scene.add(new THREE.AmbientLight(0xffffff, 0.5));
+        for (let i = 0; i < nodeCount; i++) {
+            const geom = new THREE.SphereGeometry(Math.random() * 0.15, 8, 8);
+            const mat = new THREE.MeshStandardMaterial({ color: 0x6C5CE7 });
+            const node = new THREE.Mesh(geom, mat);
 
-        camera.position.z = 5;
+            node.position.set(
+                (Math.random() - 0.5) * 6,
+                (Math.random() - 0.5) * 6,
+                (Math.random() - 0.5) * 6
+            );
+            positions.push(node.position);
+            group.add(node);
+        }
+
+        // Add Neural Connections (Lines)
+        for (let i = 0; i < positions.length; i++) {
+            if (i % 3 === 0 && positions[i + 1]) {
+                const lineMat = new THREE.LineBasicMaterial({ color: 0x6C5CE7, transparent: true, opacity: 0.2 });
+                const points = [positions[i], positions[i + 1]];
+                const lineGeom = new THREE.BufferGeometry().setFromPoints(points);
+                const line = new THREE.Line(lineGeom, lineMat);
+                group.add(line);
+            }
+        }
+
+        scene.add(group);
+        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
+        camera.position.z = 7;
 
         function animate() {
             requestAnimationFrame(animate);
-            mesh.rotation.y += 0.005;
-            mesh.rotation.x += 0.002;
+            group.rotation.y += 0.002;
+            group.rotation.x += 0.001;
             renderer.render(scene, camera);
         }
         animate();
-
-        window.addEventListener('resize', () => {
-            camera.aspect = container.clientWidth / container.clientHeight;
-            camera.updateProjectionMatrix();
-            renderer.setSize(container.clientWidth, container.clientHeight);
-        });
     </script>
 
     <script>
