@@ -137,6 +137,15 @@
     </main>
 
     <script>
+        const ledger = JSON.parse(localStorage.getItem('nivi_ledger'));
+
+        if (!ledger || !ledger.intelligence.apiKey) {
+            // Safety check: redirect back if not configured
+            window.location.href = 'model-selector.html';
+        } else {
+            console.log("NIVI Active. Connected to Graph:", ledger.graphName);
+            // Use ledger.intelligence.apiKey for your API calls to Gemini
+        }
         const journalData = [
             { time: "00:00", level: 1 }, { time: "01:00", level: 1 },
             { time: "02:00", level: 1 }, { time: "03:00", level: 1 },
