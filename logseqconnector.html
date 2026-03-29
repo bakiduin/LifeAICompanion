@@ -186,8 +186,21 @@
                 document.getElementById('fileCount').innerText = count;
 
                 // Success Transition
-                setTimeout(() => transitionSteps(step2, step3), 800);
+                setTimeout(() => {
+                    // Initialize the Local Sovereign Ledger (JSON)
+                    const niviConfig = {
+                        graphName: dirHandle.name,
+                        connectedAt: new Date().toISOString(),
+                        intelligence: {
+                            provider: null,
+                            apiKey: null
+                        }
+                    };
+                    localStorage.setItem('nivi_ledger', JSON.stringify(niviConfig));
 
+                    // Proceed to Intelligence Selection
+                    window.location.href = 'model-selector.html';
+                }, 800);
             } catch (err) {
                 showError(err.message || "Access denied by user.");
                 transitionSteps(step2, step1);
