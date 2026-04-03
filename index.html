@@ -4,7 +4,7 @@
 <head>
     <meta charset="utf-8" />
     <meta content="width=device-width, initial-scale=1.0" name="viewport" />
-    <title>LifeAICompanion | The Ethereal Archive</title>
+    <title>NIVI | The Ethereal Archive</title>
 
     <link rel="manifest" href="manifest.json">
     <meta name="apple-mobile-web-app-capable" content="yes">
@@ -17,6 +17,7 @@
         rel="stylesheet" />
     <link href="https://fonts.googleapis.com/css2?family=Material+Symbols+Outlined:wght,FILL@100..700,0..1&display=swap"
         rel="stylesheet" />
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
 
     <script>
         tailwind.config = {
@@ -25,200 +26,200 @@
                 extend: {
                     colors: {
                         nivi: {
-                            slate: "#2D3436",
-                            lavender: "#B2BEC3",
-                            soft: "#F9FAFB",
-                            accent: "#6C5CE7"
+                            slate: "#1A202C",
+                            lavender: "#E0E7FF",
+                            accent: "#6366F1",
+                            surface: "#FBF9FF"
                         }
                     },
                     fontFamily: {
-                        sans: ['Plus Jakarta Sans', 'Manrope', 'sans-serif'],
+                        sans: ["Plus Jakarta Sans", "Manrope", "sans-serif"]
                     }
                 }
             }
         }
     </script>
 
-    <style type="text/tailwindcss">
-        @layer base {
-            body { @apply bg-nivi-soft text-nivi-slate antialiased font-sans; }
+    <style>
+        body {
+            margin: 0;
+            overflow-x: hidden;
+            background-color: #FBF9FF;
         }
-        .glass-card { @apply bg-white/70 backdrop-blur-md border border-white/20 rounded-3xl shadow-sm; }
-        #canvas-container { height: 400px; width: 100%; cursor: grab; }
+
+        #canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            z-index: -1;
+        }
+
+        .glass-card {
+            background: rgba(255, 255, 255, 0.7);
+            backdrop-filter: blur(12px);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+        }
+
+        .gradient-text {
+            background: linear-gradient(135deg, #4A5568 0%, #6366F1 100%);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+        }
     </style>
 </head>
 
-<body class="overflow-x-hidden">
+<body class="bg-nivi-surface text-nivi-slate font-sans">
 
-    <nav
-        class="fixed top-0 w-full z-50 px-6 py-4 flex justify-between items-center bg-white/50 backdrop-blur-lg border-b border-gray-100">
-        <div class="flex items-center gap-2">
-            <span class="material-symbols-outlined text-nivi-accent text-3xl">psychology</span>
-            <span class="font-bold text-xl tracking-tight">NIVI</span>
+    <div id="canvas-container"></div>
+
+    <div id="install-overlay"
+        class="fixed inset-0 z-[9999] bg-white/90 backdrop-blur-md flex items-center justify-center hidden">
+        <div class="max-w-md p-8 text-center glass-card rounded-[32px] shadow-2xl mx-4">
+            <span class="material-symbols-outlined text-6xl text-nivi-accent mb-4">install_mobile</span>
+            <h1 class="text-3xl font-bold mb-2 text-nivi-slate">App Mode Required</h1>
+            <p class="text-gray-600 mb-8">NIVI is a high-agency protocol designed for deep work. To protect your data
+                and access the local graph, you must install it as an app.</p>
+
+            <button id="installBtn"
+                class="w-full bg-nivi-slate text-white py-4 rounded-2xl font-bold hover:bg-nivi-accent transition-all flex items-center justify-center gap-2">
+                <span class="material-symbols-outlined">download</span>
+                Install to Desktop / Mobile
+            </button>
+
+            <p class="mt-6 text-sm text-gray-400 italic">Click the install icon in your address bar or "Add to Home
+                Screen"</p>
         </div>
-        <div class="hidden md:flex gap-8 text-sm font-medium">
-            <a href="roadmaps.html" class="hover:text-nivi-accent transition-colors">Roadmaps</a>
-            <a href="templates.html" class="hover:text-nivi-accent transition-colors">Templates</a>
-            <a href="resources.html" class="hover:text-nivi-accent transition-colors">Resources</a>
-        </div>
-        <button id="installBtn"
-            class="hidden bg-nivi-slate text-white px-5 py-2 rounded-full text-sm font-semibold hover:bg-black transition-all">
-            Install App
-        </button>
-    </nav>
+    </div>
 
-    <main class="pt-32 pb-20 px-6">
-        <div class="max-w-6xl mx-auto grid md:grid-cols-2 gap-12 items-center">
-            <div class="space-y-8">
-                <div
-                    class="inline-flex items-center gap-2 px-3 py-1 rounded-full bg-nivi-accent/10 text-nivi-accent text-xs font-bold uppercase tracking-widest">
-                    <span class="relative flex h-2 w-2">
-                        <span
-                            class="animate-ping absolute inline-flex h-full w-full rounded-full bg-nivi-accent opacity-75"></span>
-                        <span class="relative inline-flex rounded-full h-2 w-2 bg-nivi-accent"></span>
-                    </span>
-                    Neural Ledger Active
-                </div>
-
-                <h1 class="text-5xl md:text-7xl font-extrabold leading-tight text-slate-900">
-                    Your brain, <br><span class="text-nivi-accent">visualized.</span>
-                </h1>
-
-                <p class="text-lg text-gray-500 max-w-md leading-relaxed">
-                    A local-first neural archive that transforms your daily Logseq journals into a living, breathing
-                    knowledge graph.
-                </p>
-
-                <div class="flex flex-wrap gap-4">
-                    <a href="nivi.html"
-                        class="bg-nivi-accent text-white px-8 py-4 rounded-2xl font-bold shadow-lg shadow-nivi-accent/20 hover:scale-105 transition-transform">
-                        Enter Journal
-                    </a>
-                    <a href="secondbrain.html"
-                        class="bg-white border border-gray-200 text-nivi-slate px-8 py-4 rounded-2xl font-bold hover:bg-gray-50 transition-colors">
-                        View Neural Map
-                    </a>
-                </div>
+    <main id="main-ui-container"
+        class="relative min-h-screen flex flex-col items-center justify-center p-6 text-center">
+        <nav class="fixed top-0 w-full p-6 flex justify-between items-center z-50">
+            <div class="flex items-center gap-2 font-bold text-xl tracking-tighter">
+                <span class="material-symbols-outlined text-nivi-accent">auto_awesome</span>
+                NIVI
             </div>
-
-            <div class="relative">
-                <div id="canvas-container" class="relative z-10"></div>
-                <div
-                    class="absolute inset-0 bg-gradient-to-tr from-nivi-accent/5 to-transparent rounded-full blur-3xl -z-10">
-                </div>
+            <div class="flex gap-4">
+                <a href="nivi.html"
+                    class="px-6 py-2 rounded-full glass-card text-sm font-semibold hover:bg-white transition-all">Enter
+                    Hub</a>
             </div>
-        </div>
+        </nav>
+
+        <section class="max-w-4xl">
+            <span
+                class="px-4 py-1.5 rounded-full bg-nivi-lavender text-nivi-accent text-xs font-bold uppercase tracking-widest mb-6 inline-block">The
+                Agency Protocol</span>
+            <h1 class="text-6xl md:text-8xl font-bold mb-6 gradient-text tracking-tight">Ethereal Archive</h1>
+            <p class="text-xl text-gray-600 mb-10 max-w-2xl mx-auto leading-relaxed">
+                A cognitive architecture for mindful journaling, dynamic roadmapping, and local knowledge
+                synchronization.
+            </p>
+            <div class="flex flex-col md:flex-row gap-4 justify-center">
+                <a href="nivi.html"
+                    class="px-10 py-4 bg-nivi-slate text-white rounded-2xl font-bold shadow-xl hover:scale-105 transition-transform">Get
+                    Started</a>
+                <a href="roadmaps.html"
+                    class="px-10 py-4 glass-card rounded-2xl font-bold hover:bg-white transition-all">Explore
+                    Roadmaps</a>
+            </div>
+        </section>
+
+        <footer class="fixed bottom-8 text-xs text-gray-400 uppercase tracking-widest">
+            © 2026 Bakidu Philosophy • Human Agency First
+        </footer>
     </main>
 
-    <section class="bg-white py-24 border-y border-gray-100">
-        <div class="max-w-4xl mx-auto text-center px-6">
-            <h2 class="text-3xl font-bold mb-6 text-slate-900">The Bakidu Philosophy</h2>
-            <p class="text-xl text-gray-500 italic">"Technology should scaffold human intelligence, not replace it."</p>
-            <div class="mt-12 grid grid-cols-1 md:grid-cols-3 gap-8">
-                <div class="p-6">
-                    <span class="material-symbols-outlined text-4xl text-nivi-accent mb-4">shield</span>
-                    <h3 class="font-bold mb-2">Privacy First</h3>
-                    <p class="text-sm text-gray-500">Local-only storage. Your data never leaves your device.</p>
-                </div>
-                <div class="p-6">
-                    <span class="material-symbols-outlined text-4xl text-nivi-accent mb-4">filter_center_focus</span>
-                    <h3 class="font-bold mb-2">Calm Focus</h3>
-                    <p class="text-sm text-gray-500">Zero notifications. No reactive noise. Total agency.</p>
-                </div>
-                <div class="p-6">
-                    <span class="material-symbols-outlined text-4xl text-nivi-accent mb-4">account_tree</span>
-                    <h3 class="font-bold mb-2">Dynamic Logic</h3>
-                    <p class="text-sm text-gray-500">Adaptive roadmaps that evolve with your progress.</p>
-                </div>
-            </div>
-        </div>
-    </section>
+    <script>
+        // Check if app is running in Standalone Mode
+        function checkAppMode() {
+            const isStandalone = window.matchMedia('(display-mode: standalone)').matches || window.navigator.standalone;
+            const overlay = document.getElementById('install-overlay');
+            const mainUI = document.getElementById('main-ui-container');
 
-    <footer class="py-12 px-6 text-center text-gray-400 text-xs">
-        © 2026 Bakidu. Built for Sovereign Intelligence.
-    </footer>
-
-    <script type="importmap">
-        { "imports": { "three": "https://unpkg.com/three@0.160.0/build/three.module.js" } }
-    </script>
-    <script type="module">
-        import * as THREE from 'three';
-
-        const container = document.getElementById('canvas-container');
-        const scene = new THREE.Scene();
-        const camera = new THREE.PerspectiveCamera(75, container.clientWidth / container.clientHeight, 0.1, 1000);
-        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
-
-        renderer.setSize(container.clientWidth, container.clientHeight);
-        container.appendChild(renderer.domElement);
-
-        // CREATE A NEURAL CLOUD (Mimicking your Logseq Graph)
-        const group = new THREE.Group();
-        const nodeCount = 40;
-        const positions = [];
-
-        for (let i = 0; i < nodeCount; i++) {
-            const geom = new THREE.SphereGeometry(Math.random() * 0.15, 8, 8);
-            const mat = new THREE.MeshStandardMaterial({ color: 0x6C5CE7 });
-            const node = new THREE.Mesh(geom, mat);
-
-            node.position.set(
-                (Math.random() - 0.5) * 6,
-                (Math.random() - 0.5) * 6,
-                (Math.random() - 0.5) * 6
-            );
-            positions.push(node.position);
-            group.add(node);
-        }
-
-        // Add Neural Connections (Lines)
-        for (let i = 0; i < positions.length; i++) {
-            if (i % 3 === 0 && positions[i + 1]) {
-                const lineMat = new THREE.LineBasicMaterial({ color: 0x6C5CE7, transparent: true, opacity: 0.2 });
-                const points = [positions[i], positions[i + 1]];
-                const lineGeom = new THREE.BufferGeometry().setFromPoints(points);
-                const line = new THREE.Line(lineGeom, lineMat);
-                group.add(line);
+            if (!isStandalone) {
+                overlay.classList.remove('hidden');
+                mainUI.classList.add('opacity-20', 'pointer-events-none', 'blur-sm');
             }
         }
 
-        scene.add(group);
-        scene.add(new THREE.AmbientLight(0xffffff, 0.8));
-        camera.position.z = 7;
+        window.addEventListener('load', checkAppMode);
 
-        function animate() {
-            requestAnimationFrame(animate);
-            group.rotation.y += 0.002;
-            group.rotation.x += 0.001;
-            renderer.render(scene, camera);
-        }
-        animate();
-    </script>
-
-    <script>
+        // Service Worker Registration
         if ('serviceWorker' in navigator) {
-            window.addEventListener('load', () => {
-                navigator.serviceWorker.register('/sw.js');
-            });
+            navigator.serviceWorker.register('./sw.js')
+                .then(() => console.log("PWA Service Worker Active"))
+                .catch(err => console.log("SW Error:", err));
         }
 
+        // PWA Install Prompt
         let deferredPrompt;
-        const installBtn = document.getElementById('installBtn');
-
         window.addEventListener('beforeinstallprompt', (e) => {
             e.preventDefault();
             deferredPrompt = e;
-            installBtn.classList.remove('hidden');
         });
 
-        installBtn.addEventListener('click', async () => {
+        document.getElementById('installBtn').addEventListener('click', async () => {
             if (deferredPrompt) {
                 deferredPrompt.prompt();
                 const { outcome } = await deferredPrompt.userChoice;
-                if (outcome === 'accepted') installBtn.classList.add('hidden');
+                if (outcome === 'accepted') {
+                    document.getElementById('install-overlay').classList.add('hidden');
+                }
                 deferredPrompt = null;
             }
         });
+    </script>
+
+    <script>
+        const scene = new THREE.Scene();
+        const camera = new THREE.PerspectiveCamera(75, window.innerWidth / window.innerHeight, 0.1, 1000);
+        const renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true, powerPreference: "high-performance" });
+
+        renderer.setSize(window.innerWidth, window.innerHeight);
+        document.getElementById('canvas-container').appendChild(renderer.domElement);
+
+        const group = new THREE.Group();
+        const particlesCount = 150;
+        const positions = new Float32Array(particlesCount * 3);
+
+        for (let i = 0; i < particlesCount * 3; i++) {
+            positions[i] = (Math.random() - 0.5) * 10;
+        }
+
+        const particleMat = new THREE.PointsMaterial({ size: 0.05, color: 0x6366F1, transparent: true, opacity: 0.6 });
+        const particleGeom = new THREE.BufferGeometry();
+        particleGeom.setAttribute('position', new THREE.BufferAttribute(positions, 3));
+        const points = new THREE.Points(particleGeom, particleMat);
+        group.add(points);
+
+        // Add Web-like lines
+        const lineMat = new THREE.LineBasicMaterial({ color: 0x6366F1, transparent: true, opacity: 0.1 });
+        for (let i = 0; i < 40; i++) {
+            const p1 = new THREE.Vector3(positions[i * 3], positions[i * 3 + 1], positions[i * 3 + 2]);
+            const p2 = new THREE.Vector3(positions[i * 6], positions[i * 6 + 1], positions[i * 6 + 2]);
+            const lineGeom = new THREE.BufferGeometry().setFromPoints([p1, p2]);
+            group.add(new THREE.Line(lineGeom, lineMat));
+        }
+
+        scene.add(group);
+        camera.position.z = 5;
+
+        function animate() {
+            requestAnimationFrame(animate);
+            group.rotation.y += 0.0015;
+            group.rotation.x += 0.0008;
+            renderer.render(scene, camera);
+        }
+
+        window.addEventListener('resize', () => {
+            camera.aspect = window.innerWidth / window.innerHeight;
+            camera.updateProjectionMatrix();
+            renderer.setSize(window.innerWidth, window.innerHeight);
+        });
+
+        animate();
     </script>
 </body>
 
